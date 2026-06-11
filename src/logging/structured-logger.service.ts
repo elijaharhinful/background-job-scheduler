@@ -62,14 +62,23 @@ export class StructuredLoggerService implements LoggerService {
   }
 
   info(meta: Record<string, unknown>): void {
-    this.logger.info(String(meta['event'] ?? 'event'), meta);
+    this.logger.info(
+      typeof meta['event'] === 'string' ? meta['event'] : 'event',
+      meta,
+    );
   }
 
   structuredError(meta: Record<string, unknown>): void {
-    this.logger.error(String(meta['event'] ?? 'error'), meta);
+    this.logger.error(
+      typeof meta['event'] === 'string' ? meta['event'] : 'error',
+      meta,
+    );
   }
 
   structuredWarn(meta: Record<string, unknown>): void {
-    this.logger.warn(String(meta['event'] ?? 'warn'), meta);
+    this.logger.warn(
+      typeof meta['event'] === 'string' ? meta['event'] : 'warn',
+      meta,
+    );
   }
 }

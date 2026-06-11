@@ -57,7 +57,7 @@ export class TimingWheelSchedulerService
       if (!job.scheduledAt) continue;
 
       // Don't add to wheel if it has unresolved dependencies
-      const hasDeps = await this.jobRepo.query(
+      const hasDeps: unknown[] = await this.jobRepo.query(
         'SELECT 1 FROM job_dependencies WHERE "jobId" = $1 LIMIT 1',
         [job.id],
       );
@@ -77,7 +77,9 @@ export class TimingWheelSchedulerService
     }
   }
 
-  scheduleJob(item: import('../../common/interfaces/job-heap-item.interface').JobHeapItem): void {
+  scheduleJob(
+    item: import('../../common/interfaces/job-heap-item.interface').JobHeapItem,
+  ): void {
     if (!item.scheduledAt) return;
 
     const delayMs = item.scheduledAt.getTime() - new Date().getTime();

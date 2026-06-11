@@ -30,7 +30,10 @@ export class EmailHandler implements IJobHandler {
     );
   }
 
-  async handle(payload: Record<string, unknown>, signal?: AbortSignal): Promise<HandlerResult> {
+  async handle(
+    payload: Record<string, unknown>,
+    signal?: AbortSignal,
+  ): Promise<HandlerResult> {
     const { to, subject, body } = payload as unknown as EmailPayload;
 
     if (signal?.aborted) {
@@ -55,13 +58,16 @@ export class EmailHandler implements IJobHandler {
     try {
       // In a real app with a valid API key, this would send an email.
       // If the key is 're_mock_key', it will likely fail with 401, so we mock success if key is mock
-      if (this.configService.get<string>('scheduler.resendApiKey', '') === 're_mock_key') {
+      if (
+        this.configService.get<string>('scheduler.resendApiKey', '') ===
+        're_mock_key'
+      ) {
         this.logger.info({
           event: 'mock_email_sent',
           to,
           subject,
         });
-        
+
         // Simulating long running task to allow cancellation
         await new Promise((resolve, reject) => {
           const timeout = setTimeout(resolve, 2000);

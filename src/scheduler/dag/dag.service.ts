@@ -136,9 +136,9 @@ export class DagService {
 
     return {
       nodes: Array.from(nodes.values()),
-      edges: Array.from(
-        new Set(edges.map((e) => JSON.stringify(e))),
-      ).map((e) => JSON.parse(e)),
+      edges: Array.from(new Set(edges.map((e) => JSON.stringify(e)))).map(
+        (e) => JSON.parse(e) as { source: string; target: string },
+      ),
     };
   }
 

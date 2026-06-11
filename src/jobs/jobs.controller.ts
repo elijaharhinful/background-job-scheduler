@@ -44,7 +44,7 @@ export class JobsController {
     const result = await this.jobsService.findAll(query);
     return {
       ...result,
-      data: result.data.map(JobResponseDto.fromEntity),
+      data: result.data.map((job) => JobResponseDto.fromEntity(job)),
     };
   }
 

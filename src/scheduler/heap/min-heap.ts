@@ -119,7 +119,9 @@ export class MinHeap {
         rightChild = this.heap[rightChildIndex];
         if (
           (swapIndex === null && this.compare(rightChild, item) < 0) ||
-          (swapIndex !== null && leftChild && this.compare(rightChild, leftChild) < 0)
+          (swapIndex !== null &&
+            leftChild &&
+            this.compare(rightChild, leftChild) < 0)
         ) {
           swapIndex = rightChildIndex;
         }

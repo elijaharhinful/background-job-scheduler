@@ -1,8 +1,6 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class CreateJobDependenciesTable1749600000004
-  implements MigrationInterface
-{
+export class CreateJobDependenciesTable1749600000004 implements MigrationInterface {
   name = 'CreateJobDependenciesTable1749600000004';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

@@ -32,7 +32,7 @@ export class DlqController {
     const result = await this.dlqService.findAll(query);
     return {
       ...result,
-      data: result.data.map(DlqEntryResponseDto.fromEntity),
+      data: result.data.map((entry) => DlqEntryResponseDto.fromEntity(entry)),
     };
   }
 

@@ -57,7 +57,7 @@ export class JobHeapService implements OnModuleInit {
 
     for (const job of pendingJobs) {
       // Don't add to heap if it has dependencies
-      const hasDeps = await this.jobRepo.query(
+      const hasDeps: unknown[] = await this.jobRepo.query(
         'SELECT 1 FROM job_dependencies WHERE "jobId" = $1 LIMIT 1',
         [job.id],
       );
@@ -132,15 +132,22 @@ export class JobHeapService implements OnModuleInit {
         );
 
         if (newEffectivePriority !== item.effectivePriority) {
-          this.heap.update(item.id, { effectivePriority: newEffectivePriority });
-          
-          // Also update DB asynchronously (fire and forget)
-          this.jobRepo.update(item.id, {
+          this.heap.update(item.id, {
             effectivePriority: newEffectivePriority,
-          }).catch(err => {
-            this.logger.error('Failed to sync effectivePriority to DB', err.stack);
           });
-          
+
+          // Also update DB asynchronously (fire and forget)
+          this.jobRepo
+            .update(item.id, {
+              effectivePriority: newEffectivePriority,
+            })
+            .catch((err: unknown) => {
+              this.logger.error(
+                'Failed to sync effectivePriority to DB',
+                err instanceof Error ? err.stack : undefined,
+              );
+            });
+
           updatedCount++;
         }
       }

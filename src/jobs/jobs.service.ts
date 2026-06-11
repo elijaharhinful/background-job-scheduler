@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository, SelectQueryBuilder } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { createHash } from 'crypto';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 
@@ -104,8 +104,11 @@ export class JobsService {
           createdAt: savedJob.createdAt,
           recurrenceInterval: savedJob.recurrenceInterval,
         };
-        
-        if (savedJob.scheduledAt && savedJob.scheduledAt.getTime() > Date.now()) {
+
+        if (
+          savedJob.scheduledAt &&
+          savedJob.scheduledAt.getTime() > Date.now()
+        ) {
           this.timingWheelService.scheduleJob(heapItem);
         } else {
           this.jobHeapService.insert(heapItem);
@@ -122,7 +125,10 @@ export class JobsService {
       return savedJob;
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      if (error instanceof ConflictException || error instanceof NotFoundException) {
+      if (
+        error instanceof ConflictException ||
+        error instanceof NotFoundException
+      ) {
         throw error;
       }
       throw error;
@@ -221,8 +227,8 @@ export class JobsService {
       if (this.jobHeapService.getSize() > 0) {
         this.jobHeapService.update(savedJob.id, heapItem);
       } else {
-         // actually insert since update only works if it exists
-         this.jobHeapService.insert(heapItem);
+        // actually insert since update only works if it exists
+        this.jobHeapService.insert(heapItem);
       }
     }
 
@@ -292,9 +298,9 @@ export class JobsService {
       .createQueryBuilder('job')
       .select('job.type')
       .distinct(true)
-      .getRawMany();
-    
-    return result.map((r) => r.job_type);
+      .getRawMany<{ job_type: string }>();
+
+    return result.map((r) => String(r.job_type));
   }
 
   private generatePayloadHash(
@@ -309,7 +315,7 @@ export class JobsService {
   async handleJobReady(jobId: string): Promise<void> {
     try {
       const job = await this.findOne(jobId);
-      
+
       const heapItem = {
         id: job.id,
         priority: job.priority,
@@ -324,7 +330,7 @@ export class JobsService {
       } else {
         this.jobHeapService.insert(heapItem);
       }
-      
+
       this.logger.info({
         event: 'job_ready',
         jobId: job.id,

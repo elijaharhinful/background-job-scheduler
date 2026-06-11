@@ -1,8 +1,6 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class CreateDeadLetterQueueTable1749600000003
-  implements MigrationInterface
-{
+export class CreateDeadLetterQueueTable1749600000003 implements MigrationInterface {
   name = 'CreateDeadLetterQueueTable1749600000003';
 
   public async up(queryRunner: QueryRunner): Promise<void> {

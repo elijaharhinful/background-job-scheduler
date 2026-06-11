@@ -9,11 +9,9 @@ export const SystemMessages = {
   JOB_ALREADY_PROCESSING: 'Job is currently processing and cannot be modified',
   JOB_DUPLICATE:
     'A job with identical type and payload already exists in the queue',
-  JOB_INVALID_HANDLER:
-    'No registered handler found for the specified job type',
+  JOB_INVALID_HANDLER: 'No registered handler found for the specified job type',
   JOB_DEP_NOT_FOUND: 'One or more dependency job IDs do not exist',
-  JOB_DEP_CYCLE:
-    'Adding this dependency would create a circular dependency',
+  JOB_DEP_CYCLE: 'Adding this dependency would create a circular dependency',
   JOB_WORKFLOW_FETCHED: 'Job workflow retrieved successfully',
   JOB_TYPES_FETCHED: 'Registered job types retrieved successfully',
 
@@ -31,8 +29,7 @@ export const SystemMessages = {
   // ── Benchmark ─────────────────────────────────────────────────────
   BENCHMARK_STARTED: 'Benchmark run initiated',
   BENCHMARK_FETCHED: 'Benchmark results retrieved successfully',
-  BENCHMARK_NOT_RUN:
-    'No benchmark results available — run a benchmark first',
+  BENCHMARK_NOT_RUN: 'No benchmark results available — run a benchmark first',
 
   // ── Workers ───────────────────────────────────────────────────────
   WORKERS_FETCHED: 'Worker states retrieved successfully',

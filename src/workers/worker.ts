@@ -79,8 +79,11 @@ export class Worker {
         const delay = processed ? 0 : 1000;
         this.loopTimer = setTimeout(() => this.loop(), delay);
       })
-      .catch((err) => {
-        this.logger.error(`Worker ${this.id} loop error`, err.stack);
+      .catch((err: unknown) => {
+        this.logger.error(
+          `Worker ${this.id} loop error`,
+          err instanceof Error ? err.stack : undefined,
+        );
         if (this.isRunning) {
           this.loopTimer = setTimeout(() => this.loop(), 5000);
         }
@@ -152,7 +155,10 @@ export class Worker {
       return true;
     } catch (error) {
       await queryRunner.rollbackTransaction();
-      this.logger.error(`Worker ${this.id} failed to acquire job`, (error as Error).stack);
+      this.logger.error(
+        `Worker ${this.id} failed to acquire job`,
+        (error as Error).stack,
+      );
       return false;
     } finally {
       this.currentJobId = null;
@@ -173,7 +179,10 @@ export class Worker {
     }
 
     try {
-      const result = await handler.handle(job.payload, this.abortController?.signal);
+      const result = await handler.handle(
+        job.payload,
+        this.abortController?.signal,
+      );
 
       if (result.success) {
         await this.handleJobSuccess(job, result.output);
@@ -192,7 +201,11 @@ export class Worker {
       if ((error as Error).message === 'Cancelled') {
         await this.handleJobCancelled(job);
       } else {
-        await this.handleJobFailure(job, error as Error, (error as Error).stack);
+        await this.handleJobFailure(
+          job,
+          error as Error,
+          (error as Error).stack,
+        );
       }
     }
   }
@@ -277,7 +290,7 @@ export class Worker {
         const baseDelay = baseDelays[currentJob.retryCount - 1] || 25000;
         const jitter = Math.random() * 1000;
         const delayMs = baseDelay + jitter;
-        
+
         currentJob.nextRunAt = new Date(Date.now() + delayMs);
         currentJob.scheduledAt = currentJob.nextRunAt;
         currentJob.startedAt = null;
@@ -324,12 +337,12 @@ export class Worker {
 
         await queryRunner.commitTransaction();
 
-        this.logger.error({
+        this.logger.structuredError({
           event: SystemMessages.LOG_JOB_FAILED,
           jobId: job.id,
           workerId: this.id,
           error: error.message,
-        } as any);
+        });
 
         this.sseService.broadcastJobUpdate(currentJob);
 
@@ -342,7 +355,10 @@ export class Worker {
       }
     } catch (dbError) {
       await queryRunner.rollbackTransaction();
-      this.logger.error('Failed to handle job failure', (dbError as Error).stack);
+      this.logger.error(
+        'Failed to handle job failure',
+        (dbError as Error).stack,
+      );
     } finally {
       await queryRunner.release();
     }
@@ -381,13 +397,19 @@ export class Worker {
       this.sseService.broadcastJobUpdate(currentJob);
     } catch (dbError) {
       await queryRunner.rollbackTransaction();
-      this.logger.error('Failed to handle job cancellation', (dbError as Error).stack);
+      this.logger.error(
+        'Failed to handle job cancellation',
+        (dbError as Error).stack,
+      );
     } finally {
       await queryRunner.release();
     }
   }
 
-  private async handleRecurrence(job: Job, manager: EntityManager): Promise<void> {
+  private async handleRecurrence(
+    job: Job,
+    manager: EntityManager,
+  ): Promise<void> {
     if (!job.recurrenceInterval) return;
 
     // Create a NEW job row for the recurrence (do not reuse the ID)

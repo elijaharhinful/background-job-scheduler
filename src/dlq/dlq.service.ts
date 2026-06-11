@@ -186,11 +186,16 @@ export class DlqService {
       // Using event emitter to avoid circular deps if email handler needs jobs service
       // Or we can just log it, we also need to send an alert.
       // Let's create an internal alert job.
-      
+
       const emailHandlerPayload = {
         to: this.configService.get<string>('scheduler.resendAlertTo', ''),
         subject: 'DLQ Alert: Threshold Exceeded',
-        body: 'The Dead Letter Queue has exceeded the threshold of ' + this.alertThreshold + ' items. Current count is ' + count + '.',
+        body:
+          'The Dead Letter Queue has exceeded the threshold of ' +
+          this.alertThreshold +
+          ' items. Current count is ' +
+          count +
+          '.',
       };
 
       if (emailHandlerPayload.to) {
@@ -201,7 +206,7 @@ export class DlqService {
           effectivePriority: 1,
         });
         const saved = await this.jobRepo.save(job);
-        
+
         this.heapService.insert({
           id: saved.id,
           priority: saved.priority,
@@ -210,7 +215,7 @@ export class DlqService {
           createdAt: saved.createdAt,
           recurrenceInterval: saved.recurrenceInterval,
         });
-        
+
         this.logger.info({
           event: SystemMessages.LOG_DLQ_ALERT_SENT,
         });

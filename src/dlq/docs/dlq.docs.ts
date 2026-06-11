@@ -5,7 +5,9 @@ import { DlqEntryResponseDto } from '../dto/dlq-entry-response.dto';
 
 export const DlqDocs = {
   FIND_ALL: applyDecorators(
-    ApiOperation({ summary: 'Get paginated list of dead-letter queue entries' }),
+    ApiOperation({
+      summary: 'Get paginated list of dead-letter queue entries',
+    }),
     ApiResponse({
       status: 200,
       description: SystemMessages.DLQ_FETCHED,

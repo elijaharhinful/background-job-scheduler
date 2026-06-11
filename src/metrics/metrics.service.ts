@@ -27,13 +27,14 @@ export class MetricsService implements OnModuleInit, OnModuleDestroy {
 
   onModuleInit(): void {
     // Broadcast metrics every 5 seconds
-    this.broadcastTimer = setInterval(async () => {
-      try {
-        const metrics = await this.getMetrics();
-        this.sseService.broadcastMetrics(metrics);
-      } catch (err) {
-        // Ignore errors during interval broadcast
-      }
+    this.broadcastTimer = setInterval(() => {
+      this.getMetrics()
+        .then((metrics) => {
+          this.sseService.broadcastMetrics(metrics);
+        })
+        .catch(() => {
+          // Ignore errors during interval broadcast
+        });
     }, 5000);
   }
 

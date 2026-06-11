@@ -13,10 +13,7 @@ export const schedulerConfig = registerAs('scheduler', () => ({
     process.env['SCHEDULE_TICKER_INTERVAL_MS'] ?? '1000',
     10,
   ),
-  dlqAlertThreshold: parseInt(
-    process.env['DLQ_ALERT_THRESHOLD'] ?? '10',
-    10,
-  ),
+  dlqAlertThreshold: parseInt(process.env['DLQ_ALERT_THRESHOLD'] ?? '10', 10),
   resendApiKey: process.env['RESEND_API_KEY'] ?? '',
   resendFrom: process.env['RESEND_FROM'] ?? '',
   resendAlertTo: process.env['RESEND_ALERT_TO'] ?? '',
