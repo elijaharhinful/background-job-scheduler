@@ -1,0 +1,47 @@
+import {
+  CallHandler,
+  ExecutionContext,
+  Injectable,
+  NestInterceptor,
+} from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+import { Response } from 'express';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { RESPONSE_MESSAGE_KEY } from '../decorators/response-message.decorator';
+
+export interface ApiResponse<T> {
+  success: boolean;
+  message: string;
+  data: T;
+  statusCode: number;
+  timestamp: string;
+}
+
+@Injectable()
+export class TransformResponseInterceptor<T>
+  implements NestInterceptor<T, ApiResponse<T>>
+{
+  constructor(private readonly reflector: Reflector) {}
+
+  intercept(
+    context: ExecutionContext,
+    next: CallHandler,
+  ): Observable<ApiResponse<T>> {
+    const message =
+      this.reflector.get<string>(RESPONSE_MESSAGE_KEY, context.getHandler()) ??
+      'Success';
+
+    const response = context.switchToHttp().getResponse<Response>();
+
+    return next.handle().pipe(
+      map((data: T) => ({
+        success: true,
+        message,
+        data,
+        statusCode: response.statusCode,
+        timestamp: new Date().toISOString(),
+      })),
+    );
+  }
+}
