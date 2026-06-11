@@ -1,7 +1,7 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DataSource } from 'typeorm';
-import { EventEmitter2 } from '@nestjs/event-emitter';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 
 import { Worker } from './worker';
 import { JobHeapService } from '../scheduler/heap/job-heap.service';
@@ -85,5 +85,12 @@ export class WorkerPoolService implements OnModuleInit, OnModuleDestroy {
       event: SystemMessages.LOG_WORKER_STARTED, // not exactly, but good enough
       message: 'Worker pool adjusted to ' + this.desiredCount + ' workers',
     });
+  }
+
+  @OnEvent('job.cancel_processing')
+  handleCancel(jobId: string): void {
+    for (const worker of this.workers) {
+      worker.cancelJob(jobId);
+    }
   }
 }

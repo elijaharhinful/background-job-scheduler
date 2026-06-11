@@ -15,6 +15,7 @@ import { RecurrenceIntervalMs } from '../common/enums/recurrence-interval.enum';
 export class Worker {
   private isRunning = false;
   private currentJobId: string | null = null;
+  private abortController: AbortController | null = null;
   private loopTimer: NodeJS.Timeout | null = null;
 
   constructor(
@@ -48,6 +49,12 @@ export class Worker {
       event: SystemMessages.LOG_WORKER_STOPPED,
       workerId: this.id,
     });
+  }
+
+  cancelJob(jobId: string): void {
+    if (this.currentJobId === jobId && this.abortController) {
+      this.abortController.abort();
+    }
   }
 
   getStatus(): { id: string; status: string; current_job_id: string | null } {
@@ -121,6 +128,7 @@ export class Worker {
       // We got the lock. Remove from heap.
       this.heapService.remove(job.id);
       this.currentJobId = job.id;
+      this.abortController = new AbortController();
 
       // Update status to processing
       job.status = JobStatus.PROCESSING;
@@ -148,6 +156,7 @@ export class Worker {
       return false;
     } finally {
       this.currentJobId = null;
+      this.abortController = null;
       await queryRunner.release();
     }
   }
@@ -164,19 +173,27 @@ export class Worker {
     }
 
     try {
-      const result = await handler.handle(job.payload);
+      const result = await handler.handle(job.payload, this.abortController?.signal);
 
       if (result.success) {
         await this.handleJobSuccess(job, result.output);
       } else {
-        await this.handleJobFailure(
-          job,
-          new Error(result.error ?? 'Unknown handler error'),
-          result.errorStack,
-        );
+        if (result.error === 'Cancelled') {
+          await this.handleJobCancelled(job);
+        } else {
+          await this.handleJobFailure(
+            job,
+            new Error(result.error ?? 'Unknown handler error'),
+            result.errorStack,
+          );
+        }
       }
     } catch (error) {
-      await this.handleJobFailure(job, error as Error, (error as Error).stack);
+      if ((error as Error).message === 'Cancelled') {
+        await this.handleJobCancelled(job);
+      } else {
+        await this.handleJobFailure(job, error as Error, (error as Error).stack);
+      }
     }
   }
 
@@ -255,8 +272,12 @@ export class Worker {
       if (currentJob.retryCount <= currentJob.maxRetries) {
         // Retry logic
         currentJob.status = JobStatus.PENDING;
-        // Exponential backoff
-        const delayMs = Math.pow(2, currentJob.retryCount) * 1000;
+        // Backoff with jitter: 1s, 5s, 25s
+        const baseDelays = [1000, 5000, 25000];
+        const baseDelay = baseDelays[currentJob.retryCount - 1] || 25000;
+        const jitter = Math.random() * 1000;
+        const delayMs = baseDelay + jitter;
+        
         currentJob.nextRunAt = new Date(Date.now() + delayMs);
         currentJob.scheduledAt = currentJob.nextRunAt;
         currentJob.startedAt = null;
@@ -322,6 +343,45 @@ export class Worker {
     } catch (dbError) {
       await queryRunner.rollbackTransaction();
       this.logger.error('Failed to handle job failure', (dbError as Error).stack);
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  private async handleJobCancelled(job: Job): Promise<void> {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const currentJob = await queryRunner.manager.findOne(Job, {
+        where: { id: job.id },
+      });
+
+      if (!currentJob) return;
+
+      currentJob.status = JobStatus.CANCELLED;
+      currentJob.completedAt = new Date();
+
+      await queryRunner.manager.save(Job, currentJob);
+      await queryRunner.manager.save(JobLog, {
+        jobId: job.id,
+        event: SystemMessages.LOG_JOB_CANCELLED,
+        message: 'Job cancelled gracefully during processing',
+      });
+
+      await queryRunner.commitTransaction();
+
+      this.logger.info({
+        event: SystemMessages.LOG_JOB_CANCELLED,
+        jobId: job.id,
+        workerId: this.id,
+      });
+
+      this.sseService.broadcastJobUpdate(currentJob);
+    } catch (dbError) {
+      await queryRunner.rollbackTransaction();
+      this.logger.error('Failed to handle job cancellation', (dbError as Error).stack);
     } finally {
       await queryRunner.release();
     }

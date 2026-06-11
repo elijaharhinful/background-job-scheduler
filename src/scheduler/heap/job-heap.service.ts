@@ -63,14 +63,16 @@ export class JobHeapService implements OnModuleInit {
       );
       if (hasDeps.length > 0) continue;
 
-      this.insert({
-        id: job.id,
-        priority: job.priority,
-        effectivePriority: job.effectivePriority,
-        scheduledAt: job.scheduledAt,
-        createdAt: job.createdAt,
-        recurrenceInterval: job.recurrenceInterval,
-      });
+      if (!job.scheduledAt || job.scheduledAt.getTime() <= Date.now()) {
+        this.insert({
+          id: job.id,
+          priority: job.priority,
+          effectivePriority: job.effectivePriority,
+          scheduledAt: job.scheduledAt,
+          createdAt: job.createdAt,
+          recurrenceInterval: job.recurrenceInterval,
+        });
+      }
     }
 
     this.logger.info({

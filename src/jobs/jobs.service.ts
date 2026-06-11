@@ -6,7 +6,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository, SelectQueryBuilder } from 'typeorm';
 import { createHash } from 'crypto';
-import { EventEmitter2 } from '@nestjs/event-emitter';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 
 import { Job } from './entities/job.entity';
 import { JobLog } from './entities/job-log.entity';
@@ -18,6 +18,7 @@ import { SystemMessages } from '../common/constants/system.messages';
 import { PaginatedResult } from '../common/interfaces/paginated-result.interface';
 import { JobHeapService } from '../scheduler/heap/job-heap.service';
 import { DagService } from '../scheduler/dag/dag.service';
+import { TimingWheelSchedulerService } from '../scheduler/timing-wheel/timing-wheel-scheduler.service';
 import { SseService } from '../sse/sse.service';
 import { StructuredLoggerService } from '../logging/structured-logger.service';
 
@@ -30,6 +31,7 @@ export class JobsService {
     private readonly jobLogRepo: Repository<JobLog>,
     private readonly dataSource: DataSource,
     private readonly jobHeapService: JobHeapService,
+    private readonly timingWheelService: TimingWheelSchedulerService,
     private readonly dagService: DagService,
     private readonly sseService: SseService,
     private readonly logger: StructuredLoggerService,
@@ -94,14 +96,20 @@ export class JobsService {
       }
 
       if (!hasDependencies) {
-        this.jobHeapService.insert({
+        const heapItem = {
           id: savedJob.id,
           priority: savedJob.priority,
           effectivePriority: savedJob.effectivePriority,
           scheduledAt: savedJob.scheduledAt,
           createdAt: savedJob.createdAt,
           recurrenceInterval: savedJob.recurrenceInterval,
-        });
+        };
+        
+        if (savedJob.scheduledAt && savedJob.scheduledAt.getTime() > Date.now()) {
+          this.timingWheelService.scheduleJob(heapItem);
+        } else {
+          this.jobHeapService.insert(heapItem);
+        }
       } else {
         this.logger.info({
           event: SystemMessages.LOG_JOB_DEP_WAITING,
@@ -195,13 +203,28 @@ export class JobsService {
 
     const savedJob = await this.jobRepo.save(job);
 
-    // Update in heap
-    this.jobHeapService.update(savedJob.id, {
+    // Update in heap or timing wheel
+    const heapItem = {
+      id: savedJob.id,
       priority: savedJob.priority,
       effectivePriority: savedJob.effectivePriority,
       scheduledAt: savedJob.scheduledAt,
+      createdAt: savedJob.createdAt,
       recurrenceInterval: savedJob.recurrenceInterval,
-    });
+    };
+
+    if (savedJob.scheduledAt && savedJob.scheduledAt.getTime() > Date.now()) {
+      this.jobHeapService.remove(savedJob.id); // Just in case it was there
+      this.timingWheelService.scheduleJob(heapItem);
+    } else {
+      this.timingWheelService.cancelScheduledJob(savedJob.id); // In case it was there
+      if (this.jobHeapService.getSize() > 0) {
+        this.jobHeapService.update(savedJob.id, heapItem);
+      } else {
+         // actually insert since update only works if it exists
+         this.jobHeapService.insert(heapItem);
+      }
+    }
 
     this.sseService.broadcastJobUpdate(savedJob);
 
@@ -215,9 +238,7 @@ export class JobsService {
       throw new ConflictException(SystemMessages.JOB_ALREADY_CANCELLED);
     }
 
-    if (job.status === JobStatus.PROCESSING) {
-      throw new ConflictException(SystemMessages.JOB_ALREADY_PROCESSING);
-    }
+    const wasProcessing = job.status === JobStatus.PROCESSING;
 
     job.status = JobStatus.CANCELLED;
     job.completedAt = new Date();
@@ -236,8 +257,13 @@ export class JobsService {
 
       await queryRunner.commitTransaction();
 
-      // Remove from heap
+      // Remove from heap and timing wheel
       this.jobHeapService.remove(job.id);
+      this.timingWheelService.cancelScheduledJob(job.id);
+
+      if (wasProcessing) {
+        this.eventEmitter.emit('job.cancel_processing', job.id);
+      }
 
       // Handle dependent jobs (cancel them too)
       const dependents = await this.dagService.getDependents(job.id);
@@ -277,5 +303,35 @@ export class JobsService {
   ): string {
     const data = JSON.stringify({ type, payload });
     return createHash('sha256').update(data).digest('hex');
+  }
+
+  @OnEvent('job.ready')
+  async handleJobReady(jobId: string): Promise<void> {
+    try {
+      const job = await this.findOne(jobId);
+      
+      const heapItem = {
+        id: job.id,
+        priority: job.priority,
+        effectivePriority: job.effectivePriority,
+        scheduledAt: job.scheduledAt,
+        createdAt: job.createdAt,
+        recurrenceInterval: job.recurrenceInterval,
+      };
+
+      if (job.scheduledAt && job.scheduledAt.getTime() > Date.now()) {
+        this.timingWheelService.scheduleJob(heapItem);
+      } else {
+        this.jobHeapService.insert(heapItem);
+      }
+      
+      this.logger.info({
+        event: 'job_ready',
+        jobId: job.id,
+        message: 'Dependencies met, job scheduled for execution',
+      });
+    } catch (e) {
+      this.logger.error('Failed to handle job.ready', (e as Error).stack);
+    }
   }
 }

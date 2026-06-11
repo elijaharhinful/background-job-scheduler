@@ -50,7 +50,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
       success: false,
       message,
       error,
-      statusCode: status,
+      status_code: status,
       timestamp: new Date().toISOString(),
       path: request.url,
     });

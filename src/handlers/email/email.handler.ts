@@ -30,8 +30,12 @@ export class EmailHandler implements IJobHandler {
     );
   }
 
-  async handle(payload: Record<string, unknown>): Promise<HandlerResult> {
+  async handle(payload: Record<string, unknown>, signal?: AbortSignal): Promise<HandlerResult> {
     const { to, subject, body } = payload as unknown as EmailPayload;
+
+    if (signal?.aborted) {
+      return { success: false, error: 'Cancelled' };
+    }
 
     if (!to || !subject || !body) {
       return {
@@ -57,6 +61,18 @@ export class EmailHandler implements IJobHandler {
           to,
           subject,
         });
+        
+        // Simulating long running task to allow cancellation
+        await new Promise((resolve, reject) => {
+          const timeout = setTimeout(resolve, 2000);
+          if (signal) {
+            signal.addEventListener('abort', () => {
+              clearTimeout(timeout);
+              reject(new Error('Cancelled'));
+            });
+          }
+        });
+
         return {
           success: true,
           output: {

@@ -174,7 +174,7 @@ export class DlqService {
       where: { retriedAt: IsNull() },
     });
 
-    if (count >= this.alertThreshold) {
+    if (count === this.alertThreshold) {
       this.logger.structuredWarn({
         event: SystemMessages.LOG_DLQ_THRESHOLD,
         message: SystemMessages.DLQ_THRESHOLD_EXCEEDED,

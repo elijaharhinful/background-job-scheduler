@@ -14,7 +14,7 @@ export interface ApiResponse<T> {
   success: boolean;
   message: string;
   data: T;
-  statusCode: number;
+  status_code: number;
   timestamp: string;
 }
 
@@ -39,7 +39,7 @@ export class TransformResponseInterceptor<T>
         success: true,
         message,
         data,
-        statusCode: response.statusCode,
+        status_code: response.statusCode,
         timestamp: new Date().toISOString(),
       })),
     );

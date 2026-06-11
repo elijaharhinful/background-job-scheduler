@@ -18,7 +18,7 @@ export class BenchmarkService {
       for (let j = 0; j < currentBatchSize; j++) {
         const priority = Math.floor(Math.random() * 5) + 1; // 1 to 5
         const isScheduled = Math.random() > 0.8; // 20% scheduled
-        const scheduledAt = isScheduled
+        const scheduled_at = isScheduled
           ? new Date(Date.now() + Math.random() * 60000) // within next min
           : undefined;
 
@@ -26,7 +26,7 @@ export class BenchmarkService {
           this.jobsService.create({
             type: 'send_email',
             priority,
-            scheduledAt,
+            scheduled_at,
             payload: {
               to: `benchmark-${Date.now()}-${Math.random()}@example.com`,
               subject: 'Benchmark Job',

@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
+import { OnEvent, EventEmitter2 } from '@nestjs/event-emitter';
 
 import { JobDependency } from './entities/job-dependency.entity';
 import { Job } from '../../jobs/entities/job.entity';
@@ -18,7 +19,19 @@ export class DagService {
     private readonly dependencyRepo: Repository<JobDependency>,
     @InjectRepository(Job)
     private readonly jobRepo: Repository<Job>,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
+
+  @OnEvent('job.completed')
+  async handleJobCompleted(jobId: string): Promise<void> {
+    const dependents = await this.getDependents(jobId);
+    for (const depId of dependents) {
+      const isReady = await this.isJobReady(depId);
+      if (isReady) {
+        this.eventEmitter.emit('job.ready', depId);
+      }
+    }
+  }
 
   async addDependencies(
     jobId: string,
