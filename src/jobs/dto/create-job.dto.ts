@@ -40,18 +40,18 @@ export class CreateJobDto {
   @IsInt()
   @Min(0)
   @Max(10)
-  maxRetries?: number = 3;
+  max_retries?: number = 3;
 
   @ApiPropertyOptional({ type: Date, example: '2025-01-01T00:00:00Z' })
   @IsOptional()
   @Type(() => Date)
   @IsDate()
-  scheduledAt?: Date;
+  scheduled_at?: Date;
 
   @ApiPropertyOptional({ enum: RecurrenceInterval })
   @IsOptional()
   @IsEnum(RecurrenceInterval)
-  recurrenceInterval?: RecurrenceInterval;
+  recurrence_interval?: RecurrenceInterval;
 
   @ApiPropertyOptional({
     type: [String],
@@ -59,5 +59,5 @@ export class CreateJobDto {
   })
   @IsOptional()
   @IsUUID('4', { each: true })
-  dependsOn?: string[];
+  depends_on?: string[];
 }

@@ -50,7 +50,7 @@ export class Worker {
     });
   }
 
-  getStatus(): { id: string; status: string; currentJobId: string | null } {
+  getStatus(): { id: string; status: string; current_job_id: string | null } {
     return {
       id: this.id,
       status: this.isRunning
@@ -58,7 +58,7 @@ export class Worker {
           ? 'processing'
           : 'idle'
         : 'stopped',
-      currentJobId: this.currentJobId,
+      current_job_id: this.currentJobId,
     };
   }
 

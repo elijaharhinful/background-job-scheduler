@@ -61,9 +61,9 @@ export class JobsService {
         payload: dto.payload,
         priority: dto.priority,
         effectivePriority: dto.priority,
-        maxRetries: dto.maxRetries,
-        scheduledAt: dto.scheduledAt ?? null,
-        recurrenceInterval: dto.recurrenceInterval ?? null,
+        maxRetries: dto.max_retries,
+        scheduledAt: dto.scheduled_at ?? null,
+        recurrenceInterval: dto.recurrence_interval ?? null,
         payloadHash,
       });
 
@@ -77,10 +77,10 @@ export class JobsService {
       });
 
       // Handle dependencies if any
-      if (dto.dependsOn && dto.dependsOn.length > 0) {
+      if (dto.depends_on && dto.depends_on.length > 0) {
         await this.dagService.addDependencies(
           savedJob.id,
-          dto.dependsOn,
+          dto.depends_on,
           queryRunner.manager,
         );
       }
@@ -89,7 +89,7 @@ export class JobsService {
 
       // Only add to heap if no unresolved dependencies
       let hasDependencies = false;
-      if (dto.dependsOn && dto.dependsOn.length > 0) {
+      if (dto.depends_on && dto.depends_on.length > 0) {
         hasDependencies = !(await this.dagService.isJobReady(savedJob.id));
       }
 
@@ -188,10 +188,10 @@ export class JobsService {
       job.effectivePriority = dto.priority;
     }
 
-    if (dto.maxRetries !== undefined) job.maxRetries = dto.maxRetries;
-    if (dto.scheduledAt !== undefined) job.scheduledAt = dto.scheduledAt;
-    if (dto.recurrenceInterval !== undefined)
-      job.recurrenceInterval = dto.recurrenceInterval;
+    if (dto.max_retries !== undefined) job.maxRetries = dto.max_retries;
+    if (dto.scheduled_at !== undefined) job.scheduledAt = dto.scheduled_at;
+    if (dto.recurrence_interval !== undefined)
+      job.recurrenceInterval = dto.recurrence_interval;
 
     const savedJob = await this.jobRepo.save(job);
 

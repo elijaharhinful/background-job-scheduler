@@ -8,5 +8,5 @@ export class WorkerStateDto {
   status: string;
 
   @ApiPropertyOptional()
-  currentJobId: string | null;
+  current_job_id: string | null;
 }

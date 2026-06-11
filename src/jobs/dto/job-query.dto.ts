@@ -16,7 +16,7 @@ export class JobQueryDto extends PaginationDto {
   type?: string;
 
   @ApiPropertyOptional({
-    description: 'Sort by field:createdAt (e.g. createdAt:desc)',
+    description: 'Sort by field:created_at (e.g. created_at:desc)',
   })
   @IsOptional()
   @IsString()

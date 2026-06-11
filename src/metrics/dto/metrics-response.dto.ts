@@ -25,14 +25,14 @@ export class MetricsResponseDto {
   jobs: JobMetricsDto;
 
   @ApiProperty()
-  dlqCount: number;
+  dlq_count: number;
 
   @ApiProperty()
-  activeWorkers: number;
+  active_workers: number;
 
   @ApiProperty()
-  heapSize: number;
+  heap_size: number;
 
   @ApiProperty()
-  uptimeSeconds: number;
+  uptime_seconds: number;
 }

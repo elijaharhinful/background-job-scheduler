@@ -21,37 +21,37 @@ export class JobResponseDto {
   status: JobStatus;
 
   @ApiProperty()
-  retryCount: number;
+  retry_count: number;
 
   @ApiProperty()
-  maxRetries: number;
+  max_retries: number;
 
   @ApiPropertyOptional({ type: Date })
-  scheduledAt: Date | null;
+  scheduled_at: Date | null;
 
   @ApiPropertyOptional({ type: Date })
-  startedAt: Date | null;
+  started_at: Date | null;
 
   @ApiPropertyOptional({ type: Date })
-  completedAt: Date | null;
+  completed_at: Date | null;
 
   @ApiPropertyOptional({ type: Date })
-  nextRunAt: Date | null;
+  next_run_at: Date | null;
 
   @ApiPropertyOptional({ enum: RecurrenceInterval })
-  recurrenceInterval: RecurrenceInterval | null;
+  recurrence_interval: RecurrenceInterval | null;
 
   @ApiPropertyOptional()
-  errorMessage: string | null;
+  error_message: string | null;
 
   @ApiProperty()
-  effectivePriority: number;
+  effective_priority: number;
 
   @ApiProperty({ type: Date })
-  createdAt: Date;
+  created_at: Date;
 
   @ApiProperty({ type: Date })
-  updatedAt: Date;
+  updated_at: Date;
 
   static fromEntity(job: Job): JobResponseDto {
     const dto = new JobResponseDto();
@@ -60,17 +60,17 @@ export class JobResponseDto {
     dto.payload = job.payload;
     dto.priority = job.priority;
     dto.status = job.status;
-    dto.retryCount = job.retryCount;
-    dto.maxRetries = job.maxRetries;
-    dto.scheduledAt = job.scheduledAt;
-    dto.startedAt = job.startedAt;
-    dto.completedAt = job.completedAt;
-    dto.nextRunAt = job.nextRunAt;
-    dto.recurrenceInterval = job.recurrenceInterval;
-    dto.errorMessage = job.errorMessage;
-    dto.effectivePriority = job.effectivePriority;
-    dto.createdAt = job.createdAt;
-    dto.updatedAt = job.updatedAt;
+    dto.retry_count = job.retryCount;
+    dto.max_retries = job.maxRetries;
+    dto.scheduled_at = job.scheduledAt;
+    dto.started_at = job.startedAt;
+    dto.completed_at = job.completedAt;
+    dto.next_run_at = job.nextRunAt;
+    dto.recurrence_interval = job.recurrenceInterval;
+    dto.error_message = job.errorMessage;
+    dto.effective_priority = job.effectivePriority;
+    dto.created_at = job.createdAt;
+    dto.updated_at = job.updatedAt;
     return dto;
   }
 }

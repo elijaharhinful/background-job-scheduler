@@ -6,40 +6,40 @@ export class DlqEntryResponseDto {
   id: string;
 
   @ApiProperty({ format: 'uuid' })
-  jobId: string;
+  job_id: string;
 
   @ApiProperty()
-  jobType: string;
+  job_type: string;
 
   @ApiProperty()
-  finalError: string;
+  final_error: string;
 
   @ApiPropertyOptional()
-  errorStack: string | null;
+  error_stack: string | null;
 
   @ApiProperty()
-  payloadSnapshot: Record<string, unknown>;
+  payload_snapshot: Record<string, unknown>;
 
   @ApiProperty()
-  retryCount: number;
+  retry_count: number;
 
   @ApiProperty({ type: Date })
-  createdAt: Date;
+  created_at: Date;
 
   @ApiPropertyOptional({ type: Date })
-  retriedAt: Date | null;
+  retried_at: Date | null;
 
   static fromEntity(entity: DeadLetter): DlqEntryResponseDto {
     const dto = new DlqEntryResponseDto();
     dto.id = entity.id;
-    dto.jobId = entity.jobId;
-    dto.jobType = entity.jobType;
-    dto.finalError = entity.finalError;
-    dto.errorStack = entity.errorStack;
-    dto.payloadSnapshot = entity.payloadSnapshot;
-    dto.retryCount = entity.retryCount;
-    dto.createdAt = entity.createdAt;
-    dto.retriedAt = entity.retriedAt;
+    dto.job_id = entity.jobId;
+    dto.job_type = entity.jobType;
+    dto.final_error = entity.finalError;
+    dto.error_stack = entity.errorStack;
+    dto.payload_snapshot = entity.payloadSnapshot;
+    dto.retry_count = entity.retryCount;
+    dto.created_at = entity.createdAt;
+    dto.retried_at = entity.retriedAt;
     return dto;
   }
 }

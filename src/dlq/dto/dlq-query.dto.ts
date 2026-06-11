@@ -7,10 +7,10 @@ export class DlqQueryDto extends PaginationDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  jobType?: string;
+  job_type?: string;
 
   @ApiPropertyOptional({
-    description: 'Sort by field:direction (e.g. createdAt:desc)',
+    description: 'Sort by field:direction (e.g. created_at:desc)',
   })
   @IsOptional()
   @IsString()

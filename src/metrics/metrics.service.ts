@@ -74,10 +74,10 @@ export class MetricsService implements OnModuleInit, OnModuleDestroy {
         failed,
         cancelled,
       },
-      dlqCount,
-      activeWorkers: this.workerPool.getWorkerCount(),
-      heapSize: this.heapService.getSize(),
-      uptimeSeconds: Math.floor((Date.now() - this.startTime) / 1000),
+      dlq_count: dlqCount,
+      active_workers: this.workerPool.getWorkerCount(),
+      heap_size: this.heapService.getSize(),
+      uptime_seconds: Math.floor((Date.now() - this.startTime) / 1000),
     };
   }
 }

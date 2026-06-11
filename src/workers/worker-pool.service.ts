@@ -43,7 +43,7 @@ export class WorkerPoolService implements OnModuleInit, OnModuleDestroy {
     return this.workers.length;
   }
 
-  getWorkerStates(): { id: string; status: string; currentJobId: string | null }[] {
+  getWorkerStates(): { id: string; status: string; current_job_id: string | null }[] {
     return this.workers.map((w) => w.getStatus());
   }
 

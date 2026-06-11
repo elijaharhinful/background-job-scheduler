@@ -65,8 +65,8 @@ export class DlqService {
   async findAll(query: DlqQueryDto): Promise<PaginatedResult<DeadLetter>> {
     const qb = this.dlqRepo.createQueryBuilder('dlq');
 
-    if (query.jobType) {
-      qb.andWhere('dlq.jobType = :jobType', { jobType: query.jobType });
+    if (query.job_type) {
+      qb.andWhere('dlq.jobType = :jobType', { jobType: query.job_type });
     }
 
     if (query.sort) {

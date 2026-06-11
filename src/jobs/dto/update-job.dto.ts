@@ -17,16 +17,16 @@ export class UpdateJobDto {
   @IsInt()
   @Min(0)
   @Max(10)
-  maxRetries?: number;
+  max_retries?: number;
 
   @ApiPropertyOptional({ type: Date })
   @IsOptional()
   @Type(() => Date)
   @IsDate()
-  scheduledAt?: Date;
+  scheduled_at?: Date;
 
   @ApiPropertyOptional({ enum: RecurrenceInterval })
   @IsOptional()
   @IsEnum(RecurrenceInterval)
-  recurrenceInterval?: RecurrenceInterval;
+  recurrence_interval?: RecurrenceInterval;
 }
