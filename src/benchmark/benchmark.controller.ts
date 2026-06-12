@@ -1,10 +1,11 @@
 import { Body, Controller, Get, HttpCode, Post } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
-import { BenchmarkService, BenchmarkResult } from './benchmark.service';
+import { BenchmarkService } from './benchmark.service';
 import { RunBenchmarkDto } from './dto/run-benchmark.dto';
 import { BenchmarkDocs } from './docs/benchmark.docs';
 import { ResponseMessage } from '../common/decorators/response-message.decorator';
+import type { BenchmarkResult } from '../common/interfaces/benchmark-result.interface';
 
 @ApiTags('Benchmark')
 @Controller('benchmark')
