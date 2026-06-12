@@ -178,7 +178,10 @@ export class DlqService {
 
     if (count >= this.alertThreshold) {
       const now = new Date();
-      if (!this.lastAlertSentAt || now.getTime() - this.lastAlertSentAt.getTime() > this.ALERT_COOLDOWN_MS) {
+      if (
+        !this.lastAlertSentAt ||
+        now.getTime() - this.lastAlertSentAt.getTime() > this.ALERT_COOLDOWN_MS
+      ) {
         this.lastAlertSentAt = now;
 
         this.logger.structuredWarn({
@@ -188,45 +191,45 @@ export class DlqService {
           threshold: this.alertThreshold,
         });
 
-      // Dispatch alert
-      // Using event emitter to avoid circular deps if email handler needs jobs service
-      // Or we can just log it, we also need to send an alert.
-      // Let's create an internal alert job.
+        // Dispatch alert
+        // Using event emitter to avoid circular deps if email handler needs jobs service
+        // Or we can just log it, we also need to send an alert.
+        // Let's create an internal alert job.
 
-      const emailHandlerPayload = {
-        to: this.configService.get<string>('scheduler.resendAlertTo', ''),
-        subject: 'DLQ Alert: Threshold Exceeded',
-        body:
-          'The Dead Letter Queue has exceeded the threshold of ' +
-          this.alertThreshold +
-          ' items. Current count is ' +
-          count +
-          '.',
-      };
+        const emailHandlerPayload = {
+          to: this.configService.get<string>('scheduler.resendAlertTo', ''),
+          subject: 'DLQ Alert: Threshold Exceeded',
+          body:
+            'The Dead Letter Queue has exceeded the threshold of ' +
+            this.alertThreshold +
+            ' items. Current count is ' +
+            count +
+            '.',
+        };
 
-      if (emailHandlerPayload.to) {
-        const job = this.jobRepo.create({
-          type: 'send_email',
-          payload: emailHandlerPayload as unknown as Record<string, unknown>,
-          priority: 1, // High priority
-          effectivePriority: 1,
-        });
-        const saved = await this.jobRepo.save(job);
+        if (emailHandlerPayload.to) {
+          const job = this.jobRepo.create({
+            type: 'send_email',
+            payload: emailHandlerPayload as unknown as Record<string, unknown>,
+            priority: 1, // High priority
+            effectivePriority: 1,
+          });
+          const saved = await this.jobRepo.save(job);
 
-        this.heapService.insert({
-          id: saved.id,
-          priority: saved.priority,
-          effectivePriority: saved.effectivePriority,
-          scheduledAt: saved.scheduledAt,
-          createdAt: saved.createdAt,
-          recurrenceInterval: saved.recurrenceInterval,
-        });
+          this.heapService.insert({
+            id: saved.id,
+            priority: saved.priority,
+            effectivePriority: saved.effectivePriority,
+            scheduledAt: saved.scheduledAt,
+            createdAt: saved.createdAt,
+            recurrenceInterval: saved.recurrenceInterval,
+          });
 
-        this.logger.info({
-          event: SystemMessages.LOG_DLQ_ALERT_SENT,
-        });
+          this.logger.info({
+            event: SystemMessages.LOG_DLQ_ALERT_SENT,
+          });
+        }
       }
     }
   }
-}
 }

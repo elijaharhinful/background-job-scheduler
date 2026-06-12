@@ -19,7 +19,7 @@ export interface BenchmarkResult {
 export class BenchmarkService {
   private latestResult: BenchmarkResult | null = null;
 
-  async runBenchmark(count: number): Promise<BenchmarkResult> {
+  runBenchmark(count: number): BenchmarkResult {
     const items: JobHeapItem[] = [];
     const now = new Date();
 
@@ -94,7 +94,7 @@ export class BenchmarkService {
     return this.latestResult;
   }
 
-  async getLatestResults(): Promise<BenchmarkResult> {
+  getLatestResults(): BenchmarkResult {
     if (!this.latestResult) {
       throw new NotFoundException('No benchmark results found');
     }

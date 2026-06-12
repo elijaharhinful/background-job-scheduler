@@ -5,7 +5,7 @@ import {
   NestInterceptor,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { RESPONSE_MESSAGE_KEY } from '../decorators/response-message.decorator';
@@ -33,12 +33,13 @@ export class TransformResponseInterceptor<T> implements NestInterceptor<
       this.reflector.get<string>(RESPONSE_MESSAGE_KEY, context.getHandler()) ??
       'Success';
 
-    const request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<Request>();
     const response = context.switchToHttp().getResponse<Response>();
 
     // Bypass transform for SSE endpoints to prevent breaking the EventSource format
     if (request.url.includes('/sse')) {
-      return next.handle();
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+      return next.handle() as any;
     }
 
     return next.handle().pipe(

@@ -98,7 +98,8 @@ export class TimingWheelSchedulerService
     if (delaySeconds < remainingSecondsInMinute) {
       this.secondsWheel.insert(item, delaySeconds);
     } else {
-      const delayMinutes = Math.ceil((delaySeconds - remainingSecondsInMinute) / 60) + 1;
+      const delayMinutes =
+        Math.ceil((delaySeconds - remainingSecondsInMinute) / 60) + 1;
       this.minutesWheel.insert(item, delayMinutes);
     }
   }

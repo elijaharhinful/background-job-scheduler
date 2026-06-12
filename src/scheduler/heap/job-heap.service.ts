@@ -43,7 +43,7 @@ export class JobHeapService implements OnModuleInit {
       event: SystemMessages.LOG_HEAP_HYDRATED,
       message: 'Resetting stale processing jobs to pending',
     });
-    
+
     await this.jobRepo.update(
       { status: JobStatus.PROCESSING },
       { status: JobStatus.PENDING, startedAt: null },

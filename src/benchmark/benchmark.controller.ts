@@ -15,15 +15,13 @@ export class BenchmarkController {
   @HttpCode(201)
   @BenchmarkDocs.RUN
   @ResponseMessage('Benchmark run successfully')
-  async runBenchmark(
-    @Body() dto: RunBenchmarkDto,
-  ): Promise<BenchmarkResult> {
+  runBenchmark(@Body() dto: RunBenchmarkDto): BenchmarkResult {
     return this.benchmarkService.runBenchmark(dto.count);
   }
 
   @Get('results')
   @ResponseMessage('Latest benchmark results fetched')
-  async getResults(): Promise<BenchmarkResult> {
+  getResults(): BenchmarkResult {
     return this.benchmarkService.getLatestResults();
   }
 }
