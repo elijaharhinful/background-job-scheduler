@@ -21,6 +21,7 @@ export class TimingWheelSchedulerService
 
   private tickTimer: NodeJS.Timeout;
   private readonly tickIntervalMs: number;
+  private tickCount: number = 0;
 
   constructor(
     private readonly configService: ConfigService,
@@ -91,10 +92,13 @@ export class TimingWheelSchedulerService
 
     const delaySeconds = Math.floor(delayMs / 1000);
 
-    if (delaySeconds < 60) {
+    const secondsIntoCurrentMinute = this.tickCount % 60;
+    const remainingSecondsInMinute = 60 - secondsIntoCurrentMinute;
+
+    if (delaySeconds < remainingSecondsInMinute) {
       this.secondsWheel.insert(item, delaySeconds);
     } else {
-      const delayMinutes = Math.floor(delaySeconds / 60);
+      const delayMinutes = Math.ceil((delaySeconds - remainingSecondsInMinute) / 60) + 1;
       this.minutesWheel.insert(item, delayMinutes);
     }
   }
@@ -105,13 +109,11 @@ export class TimingWheelSchedulerService
   }
 
   private startTicker(): void {
-    let tickCount = 0;
-
     this.tickTimer = setInterval(() => {
-      tickCount++;
+      this.tickCount++;
 
       // Every 60 seconds, transfer mature minute jobs to the seconds wheel
-      if (tickCount % 60 === 0) {
+      if (this.tickCount % 60 === 0) {
         const matureMinuteJobs = this.minutesWheel.tick();
         for (const job of matureMinuteJobs) {
           // These jobs are due in the next 60 seconds

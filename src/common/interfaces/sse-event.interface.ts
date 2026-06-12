@@ -1,5 +1,5 @@
 export interface SseEvent<T = unknown> {
-  event: string;
+  type?: string;
   data: T;
   id?: string;
 }

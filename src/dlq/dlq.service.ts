@@ -17,6 +17,8 @@ import { SseService } from '../sse/sse.service';
 @Injectable()
 export class DlqService {
   private readonly alertThreshold: number;
+  private lastAlertSentAt: Date | null = null;
+  private readonly ALERT_COOLDOWN_MS = 60 * 60 * 1000; // 1 hour
 
   constructor(
     @InjectRepository(DeadLetter)
@@ -174,13 +176,17 @@ export class DlqService {
       where: { retriedAt: IsNull() },
     });
 
-    if (count === this.alertThreshold) {
-      this.logger.structuredWarn({
-        event: SystemMessages.LOG_DLQ_THRESHOLD,
-        message: SystemMessages.DLQ_THRESHOLD_EXCEEDED,
-        count,
-        threshold: this.alertThreshold,
-      });
+    if (count >= this.alertThreshold) {
+      const now = new Date();
+      if (!this.lastAlertSentAt || now.getTime() - this.lastAlertSentAt.getTime() > this.ALERT_COOLDOWN_MS) {
+        this.lastAlertSentAt = now;
+
+        this.logger.structuredWarn({
+          event: SystemMessages.LOG_DLQ_THRESHOLD,
+          message: SystemMessages.DLQ_THRESHOLD_EXCEEDED,
+          count,
+          threshold: this.alertThreshold,
+        });
 
       // Dispatch alert
       // Using event emitter to avoid circular deps if email handler needs jobs service
@@ -222,4 +228,5 @@ export class DlqService {
       }
     }
   }
+}
 }

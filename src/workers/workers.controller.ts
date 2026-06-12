@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, Put } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Patch } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
 import { WorkerPoolService } from './worker-pool.service';
@@ -16,11 +16,14 @@ export class WorkersController {
   @Get()
   @WorkersDocs.GET_WORKERS
   @ResponseMessage(SystemMessages.WORKERS_FETCHED)
-  getWorkers(): WorkerStateDto[] {
-    return this.workerPool.getWorkerStates();
+  getWorkers(): { count: number; workers: WorkerStateDto[] } {
+    return {
+      count: this.workerPool.getWorkerCount(),
+      workers: this.workerPool.getWorkerStates(),
+    };
   }
 
-  @Put('count')
+  @Patch()
   @HttpCode(200)
   @WorkersDocs.UPDATE_COUNT
   @ResponseMessage(SystemMessages.WORKER_COUNT_UPDATED)

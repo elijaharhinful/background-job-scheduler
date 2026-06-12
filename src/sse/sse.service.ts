@@ -31,14 +31,14 @@ export class SseService {
         completed_at: job.completedAt,
         next_run_at: job.nextRunAt,
       },
-      event: 'job_update',
+      type: 'job_update',
     });
   }
 
   broadcastMetrics(metrics: any): void {
     this.metricsSubject.next({
       data: metrics,
-      event: 'metrics_update',
+      type: 'metrics_update',
     });
   }
 }

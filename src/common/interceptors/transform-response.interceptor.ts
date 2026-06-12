@@ -33,7 +33,13 @@ export class TransformResponseInterceptor<T> implements NestInterceptor<
       this.reflector.get<string>(RESPONSE_MESSAGE_KEY, context.getHandler()) ??
       'Success';
 
+    const request = context.switchToHttp().getRequest();
     const response = context.switchToHttp().getResponse<Response>();
+
+    // Bypass transform for SSE endpoints to prevent breaking the EventSource format
+    if (request.url.includes('/sse')) {
+      return next.handle();
+    }
 
     return next.handle().pipe(
       map((data: T) => ({

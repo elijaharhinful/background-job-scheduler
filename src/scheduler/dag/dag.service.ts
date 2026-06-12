@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EntityManager, Repository } from 'typeorm';
+import { EntityManager, Repository, In } from 'typeorm';
 import { OnEvent, EventEmitter2 } from '@nestjs/event-emitter';
 
 import { JobDependency } from './entities/job-dependency.entity';
@@ -44,7 +44,7 @@ export class DagService {
     const jobRepo = manager ? manager.getRepository(Job) : this.jobRepo;
 
     // Check if all parent jobs exist
-    const parents = await jobRepo.findByIds(dependsOnIds);
+    const parents = await jobRepo.findBy({ id: In(dependsOnIds) });
     if (parents.length !== dependsOnIds.length) {
       throw new NotFoundException(SystemMessages.JOB_DEP_NOT_FOUND);
     }

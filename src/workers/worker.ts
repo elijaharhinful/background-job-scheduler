@@ -279,10 +279,10 @@ export class Worker {
         throw new Error('Job not found during failure handling');
       }
 
-      currentJob.retryCount += 1;
       currentJob.errorMessage = error.message;
 
-      if (currentJob.retryCount <= currentJob.maxRetries) {
+      if (currentJob.retryCount < currentJob.maxRetries) {
+        currentJob.retryCount += 1;
         // Retry logic
         currentJob.status = JobStatus.PENDING;
         // Backoff with jitter: 1s, 5s, 25s
@@ -426,7 +426,7 @@ export class Worker {
       maxRetries: job.maxRetries,
       scheduledAt: nextRunAt,
       recurrenceInterval: job.recurrenceInterval,
-      payloadHash: job.payloadHash,
+      payloadHash: null,
     });
 
     const savedJob = await manager.save(Job, newJob);

@@ -1,7 +1,7 @@
-import { Body, Controller, HttpCode, Post } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Post } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
-import { BenchmarkService } from './benchmark.service';
+import { BenchmarkService, BenchmarkResult } from './benchmark.service';
 import { RunBenchmarkDto } from './dto/run-benchmark.dto';
 import { BenchmarkDocs } from './docs/benchmark.docs';
 import { ResponseMessage } from '../common/decorators/response-message.decorator';
@@ -14,10 +14,16 @@ export class BenchmarkController {
   @Post()
   @HttpCode(201)
   @BenchmarkDocs.RUN
-  @ResponseMessage('Benchmark jobs submitted')
+  @ResponseMessage('Benchmark run successfully')
   async runBenchmark(
     @Body() dto: RunBenchmarkDto,
-  ): Promise<{ message: string }> {
-    return this.benchmarkService.seedJobs(dto.count);
+  ): Promise<BenchmarkResult> {
+    return this.benchmarkService.runBenchmark(dto.count);
+  }
+
+  @Get('results')
+  @ResponseMessage('Latest benchmark results fetched')
+  async getResults(): Promise<BenchmarkResult> {
+    return this.benchmarkService.getLatestResults();
   }
 }

@@ -39,6 +39,16 @@ export class JobHeapService implements OnModuleInit {
   }
 
   async onModuleInit(): Promise<void> {
+    this.logger.info({
+      event: SystemMessages.LOG_HEAP_HYDRATED,
+      message: 'Resetting stale processing jobs to pending',
+    });
+    
+    await this.jobRepo.update(
+      { status: JobStatus.PROCESSING },
+      { status: JobStatus.PENDING, startedAt: null },
+    );
+
     await this.hydrate();
     this.startStarvationPrevention();
   }
