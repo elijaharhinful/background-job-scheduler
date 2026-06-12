@@ -73,4 +73,4 @@ jobs:
             tar -xzf dist.tar.gz
             npm ci
             npm run migration:run
-            pm2 restart background-job-scheduler
+            pm2 restart background-job-scheduler --update-env
