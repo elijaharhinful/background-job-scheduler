@@ -33,7 +33,8 @@ async function bootstrap() {
   );
 
   // Swagger setup
-  const isProduction = configService.get<string>('app.nodeEnv') === 'production';
+  const isProduction =
+    configService.get<string>('app.nodeEnv') === 'production';
 
   const config = new DocumentBuilder()
     .setTitle('Background Job Scheduler API')
