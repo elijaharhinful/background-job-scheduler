@@ -26,6 +26,7 @@ async function bootstrap() {
   });
 
   // Global prefixes, pipes, filters, interceptors
+  app.setGlobalPrefix('api');
   app.useGlobalPipes(globalValidationPipe);
   app.useGlobalFilters(new HttpExceptionFilter());
   app.useGlobalInterceptors(
@@ -33,14 +34,10 @@ async function bootstrap() {
   );
 
   // Swagger setup
-  const isProduction =
-    configService.get<string>('app.nodeEnv') === 'production';
-
   const config = new DocumentBuilder()
     .setTitle('Background Job Scheduler API')
     .setDescription('The Background Job Scheduler API documentation')
     .setVersion('1.0')
-    .addServer(isProduction ? '/api' : '/')
     .addTag('Jobs')
     .addTag('Dead Letter Queue')
     .addTag('Workers')
