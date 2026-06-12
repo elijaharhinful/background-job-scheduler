@@ -65,7 +65,7 @@ jobs:
           script: |
             cd /var/www/background-job-scheduler
             git pull origin main
-            npm ci --omit=dev
+            npm ci
             npm run build
             npm run migration:run
             pm2 restart scheduler-api
