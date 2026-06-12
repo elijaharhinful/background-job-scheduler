@@ -37,6 +37,15 @@ jobs:
           echo "DB_PASS=${{ secrets.DB_PASS }}" >> .env
           echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
           echo "RESEND_API_KEY=${{ secrets.RESEND_API_KEY }}" >> .env
+          echo "DB_LOGGING=false" >> .env
+          echo "STARVATION_CHECK_INTERVAL_MS=30000" >> .env
+          echo "AGING_INTERVAL_MIN=5" >> .env
+          echo "AGING_BOOST_PER_INTERVAL=0.5" >> .env
+          echo "SCHEDULE_TICKER_INTERVAL_MS=1000" >> .env
+          echo "DLQ_ALERT_THRESHOLD=10" >> .env
+          echo "RESEND_FROM=noreply@dilemma.com" >> .env
+          echo "RESEND_ALERT_TO=${{ secrets.RESEND_ALERT_TO }}" >> .env
+          echo "MOCK_EMAIL_FAILURE_RATE=0.1" >> .env
 
       - name: Copy .env to VPS
         uses: appleboy/scp-action@v0.1.7
