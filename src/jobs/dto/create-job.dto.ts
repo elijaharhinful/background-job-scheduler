@@ -14,6 +14,7 @@ import {
 } from 'class-validator';
 import { JobPriority } from '../../common/enums/job-priority.enum';
 import { RecurrenceInterval } from '../../common/enums/recurrence-interval.enum';
+import { IsFutureDate } from '../../common/validators/is-future-date.validator';
 
 export class CreateJobDto {
   @ApiProperty({ example: 'send_email' })
@@ -46,6 +47,7 @@ export class CreateJobDto {
   @IsOptional()
   @Type(() => Date)
   @IsDate()
+  @IsFutureDate()
   scheduled_at?: Date;
 
   @ApiPropertyOptional({ enum: RecurrenceInterval })
