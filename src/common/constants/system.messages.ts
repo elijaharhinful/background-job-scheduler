@@ -11,6 +11,7 @@ export const SystemMessages = {
     'A job with identical type and payload already exists in the queue',
   JOB_INVALID_HANDLER: 'No registered handler found for the specified job type',
   JOB_DEP_NOT_FOUND: 'One or more dependency job IDs do not exist',
+  JOB_DEP_INVALID_STATUS: 'Cannot depend on a job that is already Failed or Cancelled',
   JOB_DEP_CYCLE: 'Adding this dependency would create a circular dependency',
   JOB_WORKFLOW_FETCHED: 'Job workflow retrieved successfully',
   JOB_TYPES_FETCHED: 'Registered job types retrieved successfully',

@@ -49,6 +49,13 @@ export class DagService {
       throw new NotFoundException(SystemMessages.JOB_DEP_NOT_FOUND);
     }
 
+    const invalidParents = parents.filter(
+      (p) => p.status === JobStatus.FAILED || p.status === JobStatus.CANCELLED,
+    );
+    if (invalidParents.length > 0) {
+      throw new ConflictException(SystemMessages.JOB_DEP_INVALID_STATUS);
+    }
+
     // Check for cycles (simple depth-limited BFS/DFS)
     for (const parentId of dependsOnIds) {
       if (await this.wouldCreateCycle(jobId, parentId, repo)) {
