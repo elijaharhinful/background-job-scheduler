@@ -5,26 +5,30 @@ on:
     branches: [ "main" ]
 
 jobs:
-  test:
+  build-and-deploy:
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
+      
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20.x'
           cache: 'npm'
-      - run: npm ci
-      - run: npm run lint
-      - run: npm run build
-      # Uncomment the following line once tests are written
-      # - run: npm test
-
-  deploy:
-    needs: test
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    steps:
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Lint
+        run: npm run lint
+        
+      - name: Build Backend
+        run: npm run build
+        
+      - name: Compress Build Artifacts
+        run: tar -czf dist.tar.gz dist/
+        
       - name: Generate .env file
         run: |
           echo "PORT=${{ secrets.PORT }}" >> .env
@@ -47,26 +51,26 @@ jobs:
           echo "RESEND_ALERT_TO=${{ secrets.RESEND_ALERT_TO }}" >> .env
           echo "MOCK_EMAIL_FAILURE_RATE=0.1" >> .env
 
-      - name: Copy .env to VPS
+      - name: Copy files to VPS
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
-          source: ".env"
+          source: ".env,dist.tar.gz"
           target: "/var/www/background-job-scheduler"
 
-      - name: Deploy to VPS
+      - name: Execute Server Deployment
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
-          command_timeout: 30m
+          command_timeout: 10m
           script: |
             cd /var/www/background-job-scheduler
             git pull origin main
+            tar -xzf dist.tar.gz
             npm ci
-            npm run build
             npm run migration:run
             pm2 restart scheduler-api
