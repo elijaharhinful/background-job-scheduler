@@ -26,7 +26,6 @@ async function bootstrap() {
   });
 
   // Global prefixes, pipes, filters, interceptors
-  app.setGlobalPrefix('api/v1');
   app.useGlobalPipes(globalValidationPipe);
   app.useGlobalFilters(new HttpExceptionFilter());
   app.useGlobalInterceptors(
