@@ -37,6 +37,7 @@ async function bootstrap() {
     .setTitle('Background Job Scheduler API')
     .setDescription('The Background Job Scheduler API documentation')
     .setVersion('1.0')
+    .addServer('/api')
     .addTag('Jobs')
     .addTag('Dead Letter Queue')
     .addTag('Workers')
