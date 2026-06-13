@@ -139,7 +139,12 @@ export class MinHeap {
   }
 
   private compare(a: JobHeapItem, b: JobHeapItem): number {
-    // Both are scheduled jobs
+    // 1. Compare effective priority (lower number = higher priority)
+    if (a.effectivePriority !== b.effectivePriority) {
+      return a.effectivePriority - b.effectivePriority;
+    }
+
+    // 2. Compare scheduled time
     if (a.scheduledAt && b.scheduledAt) {
       if (a.scheduledAt.getTime() !== b.scheduledAt.getTime()) {
         return a.scheduledAt.getTime() - b.scheduledAt.getTime();
@@ -150,12 +155,7 @@ export class MinHeap {
       return -1; // Immediate jobs go before scheduled jobs
     }
 
-    // Compare effective priority (lower number = higher priority)
-    if (a.effectivePriority !== b.effectivePriority) {
-      return a.effectivePriority - b.effectivePriority;
-    }
-
-    // Tie-breaker: creation time (FIFO)
+    // 3. Tie-breaker: creation time (FIFO)
     return a.createdAt.getTime() - b.createdAt.getTime();
   }
 }
