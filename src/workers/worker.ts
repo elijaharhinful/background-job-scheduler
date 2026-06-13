@@ -36,6 +36,7 @@ export class Worker {
       event: SystemMessages.LOG_WORKER_STARTED,
       workerId: this.id,
     });
+    this.eventEmitter.emit('worker.state_changed', this.id);
     this.loop();
   }
 
@@ -49,6 +50,7 @@ export class Worker {
       event: SystemMessages.LOG_WORKER_STOPPED,
       workerId: this.id,
     });
+    this.eventEmitter.emit('worker.state_changed', this.id);
   }
 
   cancelJob(jobId: string): void {
@@ -132,6 +134,7 @@ export class Worker {
       this.heapService.remove(job.id);
       this.currentJobId = job.id;
       this.abortController = new AbortController();
+      this.eventEmitter.emit('worker.state_changed', this.id);
 
       // Update status to processing
       job.status = JobStatus.PROCESSING;
@@ -163,6 +166,7 @@ export class Worker {
     } finally {
       this.currentJobId = null;
       this.abortController = null;
+      this.eventEmitter.emit('worker.state_changed', this.id);
       await queryRunner.release();
     }
   }

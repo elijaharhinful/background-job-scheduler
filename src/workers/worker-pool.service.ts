@@ -89,6 +89,11 @@ export class WorkerPoolService implements OnModuleInit, OnModuleDestroy {
       event: SystemMessages.LOG_WORKER_STARTED, // not exactly, but good enough
       message: 'Worker pool adjusted to ' + this.desiredCount + ' workers',
     });
+
+    this.sseService.broadcastWorkerUpdate({
+      count: this.getWorkerCount(),
+      workers: this.getWorkerStates(),
+    });
   }
 
   @OnEvent('job.cancel_processing')
@@ -96,5 +101,13 @@ export class WorkerPoolService implements OnModuleInit, OnModuleDestroy {
     for (const worker of this.workers) {
       worker.cancelJob(jobId);
     }
+  }
+
+  @OnEvent('worker.state_changed')
+  handleWorkerStateChanged(): void {
+    this.sseService.broadcastWorkerUpdate({
+      count: this.getWorkerCount(),
+      workers: this.getWorkerStates(),
+    });
   }
 }

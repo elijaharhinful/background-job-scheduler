@@ -20,4 +20,10 @@ export class SseController {
   sseMetrics(): Observable<SseEvent> {
     return this.sseService.getMetricsStream();
   }
+
+  @Sse('workers')
+  @ApiOperation({ summary: 'Subscribe to real-time worker pool updates' })
+  sseWorkers(): Observable<SseEvent> {
+    return this.sseService.getWorkerStream();
+  }
 }

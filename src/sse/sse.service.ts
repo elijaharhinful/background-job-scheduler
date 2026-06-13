@@ -7,6 +7,7 @@ import { Job } from '../jobs/entities/job.entity';
 export class SseService {
   private readonly jobSubject = new Subject<SseEvent>();
   private readonly metricsSubject = new Subject<SseEvent>();
+  private readonly workerSubject = new Subject<SseEvent>();
 
   getJobStream(): Observable<SseEvent> {
     return this.jobSubject.asObservable();
@@ -14,6 +15,10 @@ export class SseService {
 
   getMetricsStream(): Observable<SseEvent> {
     return this.metricsSubject.asObservable();
+  }
+
+  getWorkerStream(): Observable<SseEvent> {
+    return this.workerSubject.asObservable();
   }
 
   broadcastJobUpdate(job: Job): void {
@@ -39,6 +44,13 @@ export class SseService {
     this.metricsSubject.next({
       data: metrics,
       type: 'metrics_update',
+    });
+  }
+
+  broadcastWorkerUpdate(workerData: { count: number; workers: any[] }): void {
+    this.workerSubject.next({
+      data: workerData,
+      type: 'worker_pool_update',
     });
   }
 }
