@@ -57,49 +57,7 @@ The in-memory Min-Heap and Timing Wheel are shared state within a single Node.js
 
 ## High-Level Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        Client (Browser)                         │
-│                    React SPA  /  SSE stream                     │
-└──────────────────────────────┬──────────────────────────────────┘
-                               │ HTTPS
-                    ┌──────────▼──────────┐
-                    │       Nginx         │
-                    │  Reverse Proxy +    │
-                    │   TLS Termination   │
-                    └──────────┬──────────┘
-                               │ HTTP (internal)
-           ┌───────────────────▼───────────────────────┐
-           │              NestJS Application            │
-           │                                           │
-           │  ┌─────────┐  ┌──────────┐  ┌─────────┐  │
-           │  │  REST   │  │   SSE    │  │ Swagger │  │
-           │  │ API     │  │ /sse/*   │  │ /docs   │  │
-           │  └────┬────┘  └────┬─────┘  └─────────┘  │
-           │       │            │                       │
-           │  ┌────▼────────────▼──────────────────┐   │
-           │  │         Service Layer               │   │
-           │  │  Jobs │ DLQ │ Workers │ Scheduler   │   │
-           │  └────────────────────┬───────────────┘   │
-           │                       │                    │
-           │  ┌─────────────────── ▼ ─────────────────┐ │
-           │  │     In-Memory Scheduler Layer          │ │
-           │  │   MinHeap  │  TimingWheel  │  DAG      │ │
-           │  └────────────────────────────────────────┘ │
-           │                       │                    │
-           │  ┌────────────────────▼───────────────────┐ │
-           │  │       Worker Pool (N workers)           │ │
-           │  │  Worker-1 │ Worker-2 │ ... │ Worker-N   │ │
-           │  └────────────────────────────────────────┘ │
-           └───────────────────────┬───────────────────┘
-                                   │
-                        ┌──────────▼──────────┐
-                        │     PostgreSQL       │
-                        │  jobs, job_logs,     │
-                        │  dead_letter_queue,  │
-                        │  job_dependencies    │
-                        └─────────────────────┘
-```
+![Architecture Diagram](./job-scheduler.jpg)
 
 ---
 
@@ -376,6 +334,7 @@ When the count of DLQ entries without a `retriedAt` timestamp crosses exactly 10
 ### Manual Retry Flow
 
 `POST /api/v1/dlq/:id/retry`:
+
 1. Resets the original job's status to `PENDING`, clears `errorMessage`, `startedAt`, `completedAt`, `retryCount`.
 2. Stamps `retriedAt` on the DLQ entry (it stays in the DLQ for audit purposes).
 3. Re-inserts the job into the MinHeap for immediate processing.
@@ -403,6 +362,7 @@ addDependency(A depends on B):
 ### Execution Gating
 
 A job with dependencies is created in `PENDING` status but is **not inserted into the heap**. Instead, every time a job completes, `DagService.handleJobCompleted()` is called, which:
+
 1. Finds all jobs that depend on the completed job.
 2. For each, checks if **all** its dependencies are now `COMPLETED`.
 3. If all parents are done, emits `job.ready` which causes `JobsService.handleJobReady()` to insert the job into the appropriate scheduler.
@@ -428,10 +388,13 @@ newEffectivePriority = max(1.0, job.priority - (intervalsPassed × AGING_BOOST_P
 ```
 
 **Default parameters:**
+
 - `AGING_INTERVAL_MIN = 5` — aging boost applies every 5 minutes of waiting
+
 - `AGING_BOOST_PER_INTERVAL = 0.5` — effective priority decreases by 0.5 per interval
 
 **Example:** A Low priority (3) job waiting for 15 minutes:
+
 - 15 min / 5 min = 3 intervals
 - New effective priority = max(1.0, 3 − 3 × 0.5) = max(1.0, 1.5) = **1.5**
 
@@ -466,6 +429,7 @@ A job with a future `scheduledAt` is not immediately inserted into the MinHeap. 
 ### Recurring Jobs
 
 When a recurring job completes successfully, the worker creates a **new job row** for the next run (it does not reuse or reset the current row). The new job:
+
 - Copies `type`, `payload`, `priority`, `maxRetries`, `recurrenceInterval`, and `payloadHash` from the parent.
 - Sets `scheduledAt = now + intervalMs`.
 - Is immediately placed in the Timing Wheel.
@@ -487,6 +451,7 @@ This design means the audit trail is never lost — every execution is a distinc
 ### Pending Jobs
 
 If a job is `PENDING` and cancelled via `POST /api/v1/jobs/:id/cancel`, it is:
+
 1. Updated to `CANCELLED` in the database within a transaction.
 2. Removed from the MinHeap via `heapService.remove(id)`.
 3. Removed from the Timing Wheel via `timingWheelService.cancelScheduledJob(id)`.
@@ -498,6 +463,7 @@ The job will never execute.
 **If a job is already `PROCESSING` when cancel is requested, the cancellation is signalled via `AbortController` but the job is not force-killed.**
 
 Specifically:
+
 1. The HTTP cancel endpoint sets the job status to `CANCELLED` in the database immediately.
 2. It also emits `job.cancel_processing` which calls `worker.cancelJob(jobId)` on all workers.
 3. The targeted worker calls `this.abortController.abort()` on its current `AbortController`.
