@@ -1,98 +1,93 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Background Job Scheduler (Backend)
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A robust, in-memory background job scheduler built with NestJS, PostgreSQL, and PM2. This service handles job creation, dependency resolution (DAG workflows), resilient execution with retries and jitter, Dead Letter Queue (DLQ) processing, and live Server-Sent Events (SSE) streaming to the frontend.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Key Features
 
-## Description
+- **In-Memory Min-Heap:** An extremely fast O(log N) priority queue holding jobs based on `Priority` > `Scheduled Time` > `Creation Time`.
+- **Timing Wheel & DAG Support:** Scheduled job handling and parent-child dependency tracking.
+- **Starvation Prevention (Aging):** Automatically boosts priority of low-priority jobs if they sit in the queue for too long.
+- **Worker Pool:** Independently polling asynchronous workers running inside the main Node.js process to share the memory heap.
+- **Dead Letter Queue (DLQ):** Captures failed jobs after max retries with automated alerting when thresholds are met.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+---
 
-## Project setup
+## 🛠 Prerequisites
 
+- **Node.js** (v18 or v20+)
+- **PostgreSQL** (v14+)
+- **PM2** (For production deployment)
+
+---
+
+## 🚀 Setup & Installation
+
+### 1. Clone & Install Dependencies
 ```bash
-$ npm install
+npm install
 ```
 
-## Compile and run the project
+### 2. Database Setup
+Create a PostgreSQL database matching your `.env` configuration (default: `scheduler_db`). 
+
+> **Note:** The project uses TypeORM with `synchronize: true` for development. The tables will be automatically created when the server starts.
+
+### 3. Environment Variables
+Copy the example environment file and customize it:
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+cp .env.example .env
 ```
 
-## Run tests
+**Essential `.env` configurations:**
+```env
+PORT=3000
+NODE_ENV=development
+WORKER_COUNT=3
+CORS_ORIGINS=http://localhost:5173,http://localhost:3000
 
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=postgres
+DB_PASS=postgres
+DB_NAME=scheduler_db
+
+# Scheduler & Workers
+STARVATION_CHECK_INTERVAL_MS=30000
+AGING_INTERVAL_MIN=5
+AGING_BOOST_PER_INTERVAL=0.5
+
+# Email Mocking
+RESEND_API_KEY=re_mock_key
+MOCK_EMAIL_FAILURE_RATE=0.1
+```
+
+---
+
+## 🏃 Running the Application
+
+### Development Mode
+To run the server locally with hot-reload:
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+npm run start:dev
 ```
+The API will be available at `http://localhost:3000` and Swagger docs at `http://localhost:3000/docs`.
 
-## Deployment
+### Production Mode (PM2)
+Because the scheduler relies on an in-memory Heap and Timing Wheel, **do not run this application in PM2 cluster mode**. It must run in `fork` mode to ensure a single, synchronized memory state.
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
+1. Build the application:
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+npm run build
+```
+2. Start using the provided ecosystem file:
+```bash
+pm2 start ecosystem.config.js
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+---
 
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+## 📚 Documentation & Architecture
+- **Architecture Details:** See [`architecture.md`](./architecture.md) for in-depth technical documentation on the internal modules and heap mechanics.
+- **API Documentation:** Visit `/docs` on the running application for the full Swagger/OpenAPI spec.
+- **UI Frontend:** This backend is designed to be consumed by the React-based `background-job-scheduler-ui`.
