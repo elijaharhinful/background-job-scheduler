@@ -71,7 +71,7 @@ To run the server locally with hot-reload:
 ```bash
 npm run start:dev
 ```
-The API will be available at `http://localhost:3000` and Swagger docs at `http://localhost:3000/docs`.
+The API will be available at `http://localhost:3000` and Swagger docs at `http://localhost:3000/api/docs`.
 
 ### Production Mode (PM2)
 Because the scheduler relies on an in-memory Heap and Timing Wheel, **do not run this application in PM2 cluster mode**. It must run in `fork` mode to ensure a single, synchronized memory state.
